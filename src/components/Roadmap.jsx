@@ -21,54 +21,56 @@ import {
 
 const milestones = [
   { id: 1, title: 'Email y WhatsApp de Bienvenida', icon: Mail, accent: 'from-sky-400 to-blue-500', steps: [
-    'Revisá el email de bienvenida y guardá el contacto',
-    'Respondé el mensaje de WhatsApp con “Listo”',
-    'Agendá la fecha de inicio en tu calendario'
+    'Revisá el email de bienvenida (Spam)',
+    'Ingresá a Skool',
+    'Ingresá al formulario de Bienvenida'
   ]},
-  { id: 2, title: 'Formulario de Onboarding', icon: FileText, accent: 'from-indigo-400 to-violet-500', steps: [
+  { id: 2, title: 'Formulario de Bienvenida', icon: FileText, accent: 'from-indigo-400 to-violet-500', steps: [
     'Completá el formulario con tus datos',
-    'Adjuntá logos y recursos de marca',
-    'Confirmá los objetivos del primer mes'
+    'Confirmá a tu guía',
+    'Ingresá al link de la Llamada de Onboarding'
   ]},
   { id: 3, title: 'Llamada de Onboarding', icon: Phone, accent: 'from-fuchsia-400 to-pink-500', steps: [
     'Coordiná horario en el link de agenda',
-    'Tené a mano tus accesos (tienda, BM, etc.)',
-    'Definimos métricas y próximos pasos'
+    'Tené a mano tus preguntas',
+    'Definimos próximos pasos'
   ]},
   { id: 4, title: 'Producto Ganador', icon: Trophy, accent: 'from-amber-400 to-orange-500', steps: [
-    'Analizamos catálogo y márgenes',
-    'Elegimos 1-3 productos foco',
-    'Definimos propuesta de valor'
+    'Ver módulos en Skool',
+    'Elegir 1-3 productos',
+    'Validarlo en la Auditoria'
   ]},
-  { id: 5, title: 'Elegido Proveedor', icon: Package, accent: 'from-emerald-400 to-teal-500', steps: [
-    'Validamos stock y tiempos de envío',
-    'Negociamos precio y MOQs',
-    'Confirmamos método logístico'
+  { id: 5, title: 'Elegido proveedor', icon: Package, accent: 'from-emerald-400 to-teal-500', steps: [
+    'Ver módulo en Skool',
+    'Negociar precios',
+    'Elegir 1-3 proveedores',
+    'Validarlo en la auditoria'
   ]},
-  { id: 6, title: 'Confirmado Tienda Creada', icon: Store, accent: 'from-cyan-400 to-sky-500', steps: [
-    'Publicamos el producto con fotos y fichas',
-    'Configuramos pasarela de pago',
-    'Testeamos checkout end-to-end'
+  { id: 6, title: 'Confirmar Tienda Creada', icon: Store, accent: 'from-cyan-400 to-sky-500', steps: [
+    'Publicar el producto con fotos y precios',
+    'Configurar pasarela de Pago',
+    'Testear todo el proceso',
+    'Validar tienda en Auditoria'
   ]},
   { id: 7, title: 'Business Manager Creado', icon: Briefcase, accent: 'from-blue-400 to-indigo-500', steps: [
-    'Creamos BM y cuentas publicitarias',
-    'Instalamos píxel y eventos',
-    'Verificamos dominio y conversiones'
+    'Crear BM y cuentas publicitarias',
+    'Instalar Pixel y Eventos',
+    'Verificar dominio y conversiones'
   ]},
   { id: 8, title: 'Primeros ADS Subidos', icon: Megaphone, accent: 'from-purple-400 to-fuchsia-500', steps: [
-    'Diseñamos 3-5 creatividades',
-    'Armamos 2-3 audiencias de test',
-    'Publicamos campaña con budget diario'
+    'Diseñar 3-5 creativos',
+    'Armar 2-3 audiencias de test',
+    'Publicar campaña con Budget Diario'
   ]},
-  { id: 9, title: '🔥 Primera Venta', icon: Flame, accent: 'from-rose-400 to-red-500', steps: [
-    'Monitoreamos costo por compra',
-    'Optimización rápida: creatividades y pujas',
-    'Agradecé al primer cliente con mensaje'
+  { id: 9, title: '🔥 Primer Venta', icon: Flame, accent: 'from-rose-400 to-red-500', steps: [
+    'Monitorear Costo por compra (CPA)',
+    'Optimización rápida diaria',
+    'Agradecer al primer cliente con mensaje'
   ]},
-  { id: 10, title: '😍 $1.000USD Facturación', icon: DollarSign, accent: 'from-green-400 to-emerald-500', steps: [
-    'Escalamos campañas ganadoras',
-    'Sistematizamos atención y fulfilment',
-    'Revisión de métricas y plan del próximo tramo'
+  { id: 10, title: '😍 $1.000 USD Facturación', icon: DollarSign, accent: 'from-green-400 to-emerald-500', steps: [
+    'Escalar campañas ganadoras',
+    'Sistematizar atención y fulfilment',
+    'Revisar métricas y plan del próximo tramo'
   ]},
 ]
 
