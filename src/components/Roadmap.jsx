@@ -312,6 +312,53 @@ const FireworkShow = ({ show }) => {
   )
 }
 
+// Segmento del camino que se "enciende" al completar un hito
+const RoadSegment = ({ dMain, dLeft, dRight, lit, withCaps = true }) => {
+  return (
+    <g>
+      {/* Bordes suaves */}
+      <motion.path d={dLeft}
+        stroke="url(#borderGrad)"
+        strokeWidth="12"
+        strokeLinecap="round"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: lit ? 0.25 : 0 }}
+        transition={{ duration: 0.6, ease: 'easeInOut' }}
+        filter="url(#softGlow)"
+      />
+      <motion.path d={dRight}
+        stroke="url(#borderGrad)"
+        strokeWidth="12"
+        strokeLinecap="round"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: lit ? 0.25 : 0 }}
+        transition={{ duration: 0.6, ease: 'easeInOut' }}
+        filter="url(#softGlow)"
+      />
+
+      {/* Centro celeste que se dibuja progresivamente */}
+      <motion.path
+        d={dMain}
+        stroke="url(#trailGrad)"
+        strokeWidth="8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        initial={{ pathLength: 0, opacity: 0 }}
+        animate={{ pathLength: lit ? 1 : 0, opacity: lit ? 0.95 : 0 }}
+        transition={{ duration: 0.9, ease: 'easeInOut' }}
+        filter="url(#softGlow)"
+      />
+
+      {withCaps && (
+        <>
+          <motion.circle cx={dMain._x1} cy={dMain._y1} r="5" fill="#22D3EE" initial={{ opacity: 0 }} animate={{ opacity: lit ? 0.9 : 0 }} />
+          <motion.circle cx={dMain._x2} cy={dMain._y2} r="5" fill="#22D3EE" initial={{ opacity: 0 }} animate={{ opacity: lit ? 0.9 : 0 }} />
+        </>
+      )}
+    </g>
+  )
+}
+
 const Checkpoint = ({ index, title, Icon, accent, side, open, onToggle, steps, completed, onMarkDone }) => {
   const isLeft = side === 'left'
   return (
@@ -440,6 +487,13 @@ export default function Roadmap() {
     }
   }, [completedAll])
 
+  // helper para saber si el segmento i->i+1 está activo (iluminado)
+  const isSegmentLit = (i) => {
+    if (i < milestones.length - 1) return completedIds.includes(milestones[i].id)
+    // tramo final: desde el último hito hacia abajo
+    return completedIds.includes(milestones[milestones.length - 1].id)
+  }
+
   return (
     <div className="relative w-full">
       {/* Fondo */}
@@ -493,7 +547,7 @@ export default function Roadmap() {
 
         {/* Escena del camino */}
         <div className="relative" style={{ height }}>
-          {/* Caminito SVG */}
+          {/* Caminito SVG (apagado por defecto, se enciende por segmento) */}
           <svg className="absolute left-1/2 -translate-x-1/2 h-full" width="560" height={height} viewBox={`0 0 560 ${height}`} fill="none">
             <defs>
               <linearGradient id="trailGrad" x1="0" y1="0" x2="1" y2="1">
@@ -533,37 +587,21 @@ export default function Roadmap() {
                 const x2 = xCenter + (left ? 150 : -150)
                 const cx1 = xCenter
                 const cx2 = xCenter
-                return (
-                  <g key={`band-${i}`} filter="url(#softGlow)">
-                    <path d={`M ${x1-10} ${y1} C ${cx1-10} ${y1 + 50}, ${cx2-10} ${y2 - 50}, ${x2-10} ${y2}`} stroke="url(#borderGrad)" strokeOpacity="0.25" strokeWidth="12" strokeLinecap="round" />
-                    <path d={`M ${x1+10} ${y1} C ${cx1+10} ${y1 + 50}, ${cx2+10} ${y2 - 50}, ${x2+10} ${y2}`} stroke="url(#borderGrad)" strokeOpacity="0.25" strokeWidth="12" strokeLinecap="round" />
-                  </g>
-                )
-              })}
 
-              {Array.from({ length: milestones.length }).map((_, i) => {
-                const y1 = i * 180 + 60
-                const y2 = (i + 1) * 180
-                const left = i % 2 === 0
-                const xCenter = 280
-                const x1 = xCenter + (left ? -150 : 150)
-                const x2 = xCenter + (left ? 150 : -150)
-                const cx1 = xCenter
-                const cx2 = xCenter
+                const dMain = `M ${x1} ${y1} C ${cx1} ${y1 + 50}, ${cx2} ${y2 - 50}, ${x2} ${y2}`
+                const dLeft = `M ${x1-10} ${y1} C ${cx1-10} ${y1 + 50}, ${cx2-10} ${y2 - 50}, ${x2-10} ${y2}`
+                const dRight = `M ${x1+10} ${y1} C ${cx1+10} ${y1 + 50}, ${cx2+10} ${y2 - 50}, ${x2+10} ${y2}`
+
+                const lit = isSegmentLit(i)
+
                 return (
-                  <g key={`center-${i}`}>
-                    <path
-                      d={`M ${x1} ${y1} C ${cx1} ${y1 + 50}, ${cx2} ${y2 - 50}, ${x2} ${y2}`}
-                      stroke="url(#trailGrad)"
-                      strokeWidth="8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="opacity-95"
-                      filter="url(#softGlow)"
+                  <g key={`seg-${i}`}>
+                    <RoadSegment
+                      dMain={Object.assign(dMain, { _x1: x1, _y1: y1, _x2: x2, _y2: y2 })}
+                      dLeft={dLeft}
+                      dRight={dRight}
+                      lit={lit}
                     />
-                    {/* tapas circulares para que "se una" con el hito */}
-                    <circle cx={x1} cy={y1} r="5" fill="#22D3EE" opacity="0.9" />
-                    <circle cx={x2} cy={y2} r="5" fill="#22D3EE" opacity="0.9" />
                   </g>
                 )
               })}
@@ -576,20 +614,27 @@ export default function Roadmap() {
                 const xCenter = 280
                 const xStart = xCenter + (left ? 150 : -150)
                 const yEnd = baseHeight + Math.min(tail - 20, 220)
+
+                const dMain = `M ${xStart} ${y2} C ${xCenter} ${y2 + 60}, ${xCenter} ${yEnd - 60}, ${xCenter} ${yEnd}`
+                const dLeft = `M ${xStart-10} ${y2} C ${xCenter-10} ${y2 + 60}, ${xCenter-10} ${yEnd - 60}, ${xCenter-10} ${yEnd}`
+                const dRight = `M ${xStart+10} ${y2} C ${xCenter+10} ${y2 + 60}, ${xCenter+10} ${yEnd - 60}, ${xCenter+10} ${yEnd}`
+
+                const lit = isSegmentLit(milestones.length - 1)
+
                 return (
-                  <g key="final-tail" filter="url(#softGlow)">
-                    {/* bordes brillo */}
-                    <path d={`M ${xStart-10} ${y2} C ${xCenter-10} ${y2 + 60}, ${xCenter-10} ${yEnd - 60}, ${xCenter-10} ${yEnd}`} stroke="url(#borderGrad)" strokeOpacity="0.22" strokeWidth="12" strokeLinecap="round" />
-                    <path d={`M ${xStart+10} ${y2} C ${xCenter+10} ${y2 + 60}, ${xCenter+10} ${yEnd - 60}, ${xCenter+10} ${yEnd}`} stroke="url(#borderGrad)" strokeOpacity="0.22" strokeWidth="12" strokeLinecap="round" />
-                    {/* centro */}
-                    <path d={`M ${xStart} ${y2} C ${xCenter} ${y2 + 60}, ${xCenter} ${yEnd - 60}, ${xCenter} ${yEnd}`} stroke="url(#trailGrad)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
-                    <circle cx={xStart} cy={y2} r="5" fill="#22D3EE" opacity="0.9" />
-                    <circle cx={xCenter} cy={yEnd} r="5" fill="#22D3EE" opacity="0.7" />
+                  <g key="final-tail">
+                    <RoadSegment
+                      dMain={Object.assign(dMain, { _x1: xStart, _y1: y2, _x2: xCenter, _y2: yEnd })}
+                      dLeft={dLeft}
+                      dRight={dRight}
+                      lit={lit}
+                      withCaps={true}
+                    />
                   </g>
                 )
               })()}
 
-              {/* guía punteada central sutil con desvanecido */}
+              {/* guía punteada central sutil */}
               <motion.line
                 x1="280" y1="0" x2="280" y2={height}
                 stroke="rgba(255,255,255,0.12)"
@@ -599,7 +644,7 @@ export default function Roadmap() {
                 transition={{ duration: 1.6, ease: 'easeInOut' }}
               />
 
-              {/* bolita ornamental con movimiento más suave y fade en extremos */}
+              {/* bolita ornamental */}
               <motion.circle r="4" fill="#22D3EE" filter="url(#softGlow)"
                 animate={{ cy: [-20, height + 20], opacity: [0, 0.6, 0] }}
                 transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
