@@ -311,7 +311,7 @@ export default function Roadmap() {
                 <stop offset="100%" stopColor="#10B981" />
               </linearGradient>
               <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur stdDeviation="10" result="blur" />
+                <feGaussianBlur stdDeviation="8" result="blur" />
                 <feMerge>
                   <feMergeNode in="blur" />
                   <feMergeNode in="SourceGraphic" />
@@ -320,7 +320,7 @@ export default function Roadmap() {
             </defs>
 
             {Array.from({ length: milestones.length }).map((_, i) => {
-              const y1 = i * 180 + 40
+              const y1 = i * 180 + 60
               const y2 = (i + 1) * 180
               const left = i % 2 === 0
               const xCenter = 280
@@ -330,14 +330,14 @@ export default function Roadmap() {
               const cx2 = xCenter
               return (
                 <g key={`band-${i}`} filter="url(#softGlow)">
-                  <path d={`M ${x1-10} ${y1} C ${cx1-10} ${y1 + 50}, ${cx2-10} ${y2 - 50}, ${x2-10} ${y2}`} stroke="url(#borderGrad)" strokeOpacity="0.25" strokeWidth="10" />
-                  <path d={`M ${x1+10} ${y1} C ${cx1+10} ${y1 + 50}, ${cx2+10} ${y2 - 50}, ${x2+10} ${y2}`} stroke="url(#borderGrad)" strokeOpacity="0.25" strokeWidth="10" />
+                  <path d={`M ${x1-10} ${y1} C ${cx1-10} ${y1 + 50}, ${cx2-10} ${y2 - 50}, ${x2-10} ${y2}`} stroke="url(#borderGrad)" strokeOpacity="0.25" strokeWidth="12" strokeLinecap="round" />
+                  <path d={`M ${x1+10} ${y1} C ${cx1+10} ${y1 + 50}, ${cx2+10} ${y2 - 50}, ${x2+10} ${y2}`} stroke="url(#borderGrad)" strokeOpacity="0.25" strokeWidth="12" strokeLinecap="round" />
                 </g>
               )
             })}
 
             {Array.from({ length: milestones.length }).map((_, i) => {
-              const y1 = i * 180 + 40
+              const y1 = i * 180 + 60
               const y2 = (i + 1) * 180
               const left = i % 2 === 0
               const xCenter = 280
@@ -346,16 +346,24 @@ export default function Roadmap() {
               const cx1 = xCenter
               const cx2 = xCenter
               return (
-                <path
-                  key={`center-${i}`}
-                  d={`M ${x1} ${y1} C ${cx1} ${y1 + 50}, ${cx2} ${y2 - 50}, ${x2} ${y2}`}
-                  stroke="url(#trailGrad)"
-                  strokeWidth="6"
-                  className="opacity-90"
-                />
+                <g key={`center-${i}`}>
+                  <path
+                    d={`M ${x1} ${y1} C ${cx1} ${y1 + 50}, ${cx2} ${y2 - 50}, ${x2} ${y2}`}
+                    stroke="url(#trailGrad)"
+                    strokeWidth="8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="opacity-95"
+                    filter="url(#softGlow)"
+                  />
+                  {/* tapas circulares para que "se una" con el hito */}
+                  <circle cx={x1} cy={y1} r="5" fill="#22D3EE" opacity="0.9" />
+                  <circle cx={x2} cy={y2} r="5" fill="#22D3EE" opacity="0.9" />
+                </g>
               )
             })}
 
+            {/* guía punteada central sutil */}
             <motion.line
               x1="280" y1="0" x2="280" y2={height}
               stroke="rgba(255,255,255,0.12)"
@@ -365,6 +373,7 @@ export default function Roadmap() {
               transition={{ duration: 1.6 }}
             />
 
+            {/* bolita ornamental */}
             <motion.circle r="5" fill="#22D3EE" filter="url(#softGlow)"
               animate={{ cy: [0, height], opacity: [0.8, 0.4, 0.8] }}
               transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
@@ -387,7 +396,11 @@ export default function Roadmap() {
           {/* Checkpoints */}
           <div className="absolute inset-0">
             {milestones.map((m, i) => (
-              <div key={m.id} className="absolute left-0 top-0 w-full" style={{ top: i * 180 }}>
+              <div
+                key={m.id}
+                className="absolute left-0 top-0 w-full"
+                style={{ top: i * 180, zIndex: openId === m.id ? 1000 : (milestones.length - i) }}
+              >
                 <Checkpoint
                   index={i}
                   title={m.title}
