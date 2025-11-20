@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Mail,
@@ -14,7 +14,8 @@ import {
   CheckCircle2,
   ChevronDown,
   MapPin,
-  Flag
+  Flag,
+  CheckCircle
 } from 'lucide-react'
 
 const milestones = [
@@ -71,7 +72,6 @@ const milestones = [
 ]
 
 const CuteDeco = ({ height }) => {
-  // Pequeños adornos: nubes, estrellitas y banderines en el camino
   const deco = useMemo(() => Array.from({ length: 14 }).map((_, i) => ({
     id: i,
     x: Math.random() * 100,
@@ -110,7 +110,38 @@ const CuteDeco = ({ height }) => {
   )
 }
 
-const Checkpoint = ({ index, title, Icon, accent, side, open, onToggle, steps }) => {
+const ConfettiBurst = ({ y, side }) => {
+  const pieces = useMemo(() => Array.from({ length: 22 }).map((_, i) => {
+    const angle = (i / 22) * Math.PI * 2
+    const dist = 40 + Math.random() * 50
+    return {
+      id: i,
+      x: Math.cos(angle) * dist * (side === 'left' ? 1 : -1),
+      y: Math.sin(angle) * dist,
+      r: 4 + Math.random() * 5,
+      c: ['#22d3ee', '#38bdf8', '#a78bfa', '#34d399', '#f472b6'][i % 5]
+    }
+  }), [side])
+  const originX = '50%'
+  return (
+    <div className="pointer-events-none absolute left-0 w-full" style={{ top: y }}>
+      <div className="relative" style={{ left: originX }}>
+        {pieces.map(p => (
+          <motion.span
+            key={p.id}
+            initial={{ opacity: 1, x: 0, y: 0, scale: 0.6, rotate: 0 }}
+            animate={{ opacity: [1, 1, 0], x: p.x, y: p.y, scale: [0.6, 1.1, 1], rotate: 180 }}
+            transition={{ duration: 0.9, ease: 'easeOut' }}
+            style={{ backgroundColor: p.c, width: p.r, height: p.r }}
+            className="inline-block rounded-sm absolute shadow-[0_0_0_2px_rgba(255,255,255,0.15)]"
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+const Checkpoint = ({ index, title, Icon, accent, side, open, onToggle, steps, completed, onMarkDone }) => {
   const isLeft = side === 'left'
   return (
     <div className={`relative w-full flex ${isLeft ? 'justify-start' : 'justify-end'}`}>
@@ -119,15 +150,22 @@ const Checkpoint = ({ index, title, Icon, accent, side, open, onToggle, steps })
           onClick={onToggle}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className={`group relative w-full text-left rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-4 sm:p-5 shadow-[0_10px_30px_rgba(0,0,0,0.25)] overflow-hidden`}
+          className={`group relative w-full text-left rounded-2xl border ${completed ? 'border-emerald-400/40' : 'border-white/10'} ${completed ? 'bg-emerald-500/10' : 'bg-white/5'} backdrop-blur-xl p-4 sm:p-5 shadow-[0_10px_30px_rgba(0,0,0,0.25)] overflow-hidden`}
         >
           <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-r ${isLeft ? 'from-white/5 to-transparent' : 'from-transparent to-white/5'}`} />
           <div className="relative flex items-center gap-3">
-            <div className={`shrink-0 p-2.5 rounded-xl bg-gradient-to-br ${accent} text-white shadow-[0_12px_30px_rgba(37,99,235,0.35)]` }>
+            <motion.div animate={completed ? { scale: [1, 1.1, 1], rotate: [0, -8, 0] } : {}} transition={{ duration: 0.5 }} className={`shrink-0 p-2.5 rounded-xl bg-gradient-to-br ${accent} text-white shadow-[0_12px_30px_rgba(37,99,235,0.35)]` }>
               <Icon className="w-5 h-5" />
-            </div>
+            </motion.div>
             <div className="flex-1">
-              <p className="text-white font-semibold leading-tight">{title}</p>
+              <p className="text-white font-semibold leading-tight flex items-center gap-2">
+                {title}
+                {completed && (
+                  <span className="inline-flex items-center gap-1 text-emerald-300 text-xs font-medium">
+                    <CheckCircle className="w-4 h-4" /> ¡Completado!
+                  </span>
+                )}
+              </p>
               <p className="text-xs text-white/60">Hito {index + 1} • Tocá para ver el paso a paso</p>
             </div>
             <div className="shrink-0 flex items-center gap-2">
@@ -158,7 +196,15 @@ const Checkpoint = ({ index, title, Icon, accent, side, open, onToggle, steps })
                   ))}
                 </ul>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <button className="px-3 py-1.5 rounded-lg bg-emerald-500/90 text-white text-xs font-medium hover:bg-emerald-500 transition">Marcar como hecho</button>
+                  <motion.button
+                    onClick={onMarkDone}
+                    whileTap={{ scale: 0.98 }}
+                    whileHover={{ scale: 1.02 }}
+                    disabled={completed}
+                    className={`px-3 py-1.5 rounded-lg text-white text-xs font-medium transition ${completed ? 'bg-emerald-500/60 cursor-default' : 'bg-emerald-500/90 hover:bg-emerald-500'}`}
+                  >
+                    {completed ? '¡Hecho!' : 'Marcar como hecho'}
+                  </motion.button>
                   <button className="px-3 py-1.5 rounded-lg bg-white/10 text-white text-xs hover:bg-white/15 transition">Ver recursos</button>
                 </div>
               </div>
@@ -167,15 +213,38 @@ const Checkpoint = ({ index, title, Icon, accent, side, open, onToggle, steps })
         </AnimatePresence>
       </div>
 
-      {/* Node del camino */}
-      <div className={`absolute top-1/2 -translate-y-1/2 ${isLeft ? 'right-[-14px]' : 'left-[-14px]'} w-3 h-3 rounded-full bg-white/90 border border-white/30 shadow-[0_0_0_6px_rgba(255,255,255,0.08)]`}></div>
+      {/* Nodo del camino */}
+      <motion.div
+        animate={completed ? { scale: [1, 1.3, 1], boxShadow: ['0 0 0 6px rgba(255,255,255,0.08)', '0 0 0 10px rgba(16,185,129,0.25)', '0 0 0 6px rgba(255,255,255,0.08)'] } : {}}
+        className={`absolute top-1/2 -translate-y-1/2 ${isLeft ? 'right-[-14px]' : 'left-[-14px]'} w-3 h-3 rounded-full ${completed ? 'bg-emerald-300' : 'bg-white/90'} border ${completed ? 'border-emerald-400/70' : 'border-white/30'} shadow-[0_0_0_6px_rgba(255,255,255,0.08)]`}
+      />
     </div>
   )
 }
 
 export default function Roadmap() {
   const [openId, setOpenId] = useState(null)
+  const [completedIds, setCompletedIds] = useState([])
+  const [celebrate, setCelebrate] = useState(null) // { id, y, side }
   const height = milestones.length * 180
+
+  const handleMarkDone = (m, index) => {
+    if (!completedIds.includes(m.id)) {
+      const next = [...completedIds, m.id]
+      setCompletedIds(next)
+      // Disparo confetti
+      const y = index * 180 + 65
+      const side = index % 2 === 0 ? 'left' : 'right'
+      setCelebrate({ id: m.id, y, side })
+      // Abrir siguiente checkpoint si existe
+      const nextMilestone = milestones[index + 1]
+      if (nextMilestone) setOpenId(nextMilestone.id)
+      // Limpiar confetti
+      setTimeout(() => setCelebrate(null), 1000)
+    }
+  }
+
+  const progress = completedIds.length / milestones.length
 
   return (
     <div className="relative w-full">
@@ -187,24 +256,50 @@ export default function Roadmap() {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 sm:px-8 pt-12 sm:pt-16">
-        {/* Heading */}
+        {/* Heading + progreso */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-10 sm:mb-16"
+          className="text-center mb-6 sm:mb-8"
         >
           <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white mb-3">
             Tu Caminito de Éxito
           </h1>
-          <p className="text-sm sm:text-base text-blue-200/80 max-w-2xl mx-auto">
+          <p className="text-sm sm:text-base text-blue-200/80 max-w-2xl mx-auto mb-4">
             Un camino divertido y claro. Tocá cada checkpoint para ver el paso a paso.
           </p>
+          <div className="mx-auto max-w-xl text-left">
+            <div className="flex items-center justify-between text-xs text-blue-200/80 mb-1">
+              <span>Progreso</span>
+              <span>{completedIds.length}/{milestones.length}</span>
+            </div>
+            <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+              <motion.div
+                className="h-full bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400"
+                initial={{ width: 0 }}
+                animate={{ width: `${progress * 100}%` }}
+                transition={{ type: 'spring', stiffness: 80, damping: 18 }}
+              />
+            </div>
+            <AnimatePresence>
+              {completedIds.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  className="mt-2 text-emerald-300 text-xs text-center"
+                >
+                  ¡Seguí así! Cada paso te acerca al objetivo 🚀
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </motion.div>
 
         {/* Escena del camino */}
         <div className="relative" style={{ height }}>
-          {/* Caminito SVG más "zarpado" */}
+          {/* Caminito SVG */}
           <svg className="absolute left-1/2 -translate-x-1/2 h-full" width="560" height={height} viewBox={`0 0 560 ${height}`} fill="none">
             <defs>
               <linearGradient id="trailGrad" x1="0" y1="0" x2="1" y2="1">
@@ -224,7 +319,6 @@ export default function Roadmap() {
               </filter>
             </defs>
 
-            {/* Bordes del caminito (cinta) */}
             {Array.from({ length: milestones.length }).map((_, i) => {
               const y1 = i * 180 + 40
               const y2 = (i + 1) * 180
@@ -242,7 +336,6 @@ export default function Roadmap() {
               )
             })}
 
-            {/* Centro brillante del camino */}
             {Array.from({ length: milestones.length }).map((_, i) => {
               const y1 = i * 180 + 40
               const y2 = (i + 1) * 180
@@ -263,7 +356,6 @@ export default function Roadmap() {
               )
             })}
 
-            {/* Línea punteada animada */}
             <motion.line
               x1="280" y1="0" x2="280" y2={height}
               stroke="rgba(255,255,255,0.12)"
@@ -273,7 +365,6 @@ export default function Roadmap() {
               transition={{ duration: 1.6 }}
             />
 
-            {/* Bolita que recorre lentamente el camino (ornamental) */}
             <motion.circle r="5" fill="#22D3EE" filter="url(#softGlow)"
               animate={{ cy: [0, height], opacity: [0.8, 0.4, 0.8] }}
               transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
@@ -283,6 +374,15 @@ export default function Roadmap() {
 
           {/* Adornos */}
           <CuteDeco height={height} />
+
+          {/* Confetti de celebración */}
+          <AnimatePresence>
+            {celebrate && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <ConfettiBurst y={celebrate.y} side={celebrate.side} />
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Checkpoints */}
           <div className="absolute inset-0">
@@ -297,6 +397,8 @@ export default function Roadmap() {
                   side={i % 2 === 0 ? 'left' : 'right'}
                   open={openId === m.id}
                   onToggle={() => setOpenId(openId === m.id ? null : m.id)}
+                  completed={completedIds.includes(m.id)}
+                  onMarkDone={() => handleMarkDone(m, i)}
                 />
               </div>
             ))}
