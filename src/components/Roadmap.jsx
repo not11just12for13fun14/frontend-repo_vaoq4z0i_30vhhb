@@ -111,55 +111,89 @@ const CuteDeco = ({ height }) => {
   )
 }
 
-const ConfettiBurst = ({ y, side }) => {
-  const pieces = useMemo(() => Array.from({ length: 40 }).map((_, i) => {
-    const angle = (i / 40) * Math.PI * 2
-    const burstDist = 70 + Math.random() * 90
-    const drift = (Math.random() * 40 + 10) * (side === 'left' ? 1 : -1)
+// Confeti: explosión y desvanecimiento (sin deriva lateral secundaria)
+const ConfettiBurst = ({ y }) => {
+  const count = 50
+  const pieces = useMemo(() => Array.from({ length: count }).map((_, i) => {
+    const angle = (i / count) * Math.PI * 2
+    const radius = 90 + Math.random() * 110
+    const hue = 180 + Math.random() * 180
+    const w = 6 + Math.random() * 10
+    const h = 10 + Math.random() * 14
+    const rot = 180 + Math.random() * 540
     return {
       id: i,
-      x1: Math.cos(angle) * burstDist * (side === 'left' ? 1 : -1),
-      y1: Math.sin(angle) * burstDist,
-      x2: Math.cos(angle) * (burstDist * 0.6) + drift,
-      y2: Math.sin(angle) * (burstDist * 0.3) + (120 + Math.random() * 140),
-      w: 6 + Math.random() * 8,
-      h: 10 + Math.random() * 12,
-      rot: 180 + Math.random() * 540,
-      hue: 180 + Math.random() * 180,
-      delay: Math.random() * 0.06
+      x: Math.cos(angle) * radius,
+      y: Math.sin(angle) * radius,
+      hue,
+      w,
+      h,
+      rot,
+      delay: Math.random() * 0.04
     }
-  }), [side])
-  const originX = '50%'
+  }), [])
   return (
     <div className="pointer-events-none absolute left-0 w-full" style={{ top: y }}>
-      <div className="relative" style={{ left: originX }}>
+      <div className="relative" style={{ left: '50%' }}>
         {pieces.map(p => (
           <motion.span
             key={p.id}
             initial={{ opacity: 1, x: 0, y: 0, scale: 0.9, rotate: 0 }}
-            animate={{
-              opacity: [1, 1, 0.95, 0.85, 0],
-              x: [0, p.x1, p.x2],
-              y: [0, p.y1, p.y2],
-              scale: [0.9, 1.1, 1],
-              rotate: [0, p.rot * 0.6, p.rot]
-            }}
-            transition={{ duration: 1.8, ease: 'easeOut', delay: p.delay }}
+            animate={{ opacity: [1, 1, 0.6, 0], x: p.x, y: p.y, scale: [0.9, 1.05, 1], rotate: p.rot }}
+            transition={{ duration: 1.2, ease: 'easeOut', delay: p.delay }}
             style={{
               background: `linear-gradient(180deg, hsl(${p.hue} 95% 62%) 0%, hsl(${p.hue + 30} 95% 58%) 100%)`,
               width: p.w,
               height: p.h,
-              filter: 'drop-shadow(0 0 6px rgba(255,255,255,0.5))',
+              filter: 'drop-shadow(0 0 6px rgba(255,255,255,0.45))',
             }}
             className="inline-block absolute rounded-[2px]"
-          />
-        ))}
+          />)
+        )}
       </div>
     </div>
   )
 }
 
-// Fuegos artificiales para el 10/10
+// Fuegos artificiales puntuales alrededor de la pantalla en cada hito
+const EdgeFireworks = ({ id }) => {
+  const spots = useMemo(() => {
+    // posiciones cerca de bordes: esquinas y medios
+    const base = [
+      { x: '5%', y: '8%' }, { x: '95%', y: '10%' },
+      { x: '5%', y: '92%' }, { x: '95%', y: '90%' },
+      { x: '50%', y: '5%' }, { x: '50%', y: '95%' },
+      { x: '3%', y: '50%' }, { x: '97%', y: '50%' }
+    ]
+    // mezcla aleatoria parcial
+    return base.sort(() => Math.random() - 0.5).slice(0, 5 + Math.floor(Math.random() * 3))
+  }, [id])
+
+  return (
+    <div className="pointer-events-none fixed inset-0 z-[60]">
+      {spots.map((s, idx) => (
+        <div key={idx} className="absolute" style={{ left: s.x, top: s.y }}>
+          {Array.from({ length: 14 + Math.floor(Math.random() * 8) }).map((_, i) => {
+            const angle = (i / 18) * Math.PI * 2
+            const dist = 50 + Math.random() * 70
+            const color = `hsl(${200 + (i % 5) * 18} 90% 60%)`
+            return (
+              <motion.span
+                key={i}
+                initial={{ x: 0, y: 0, opacity: 1, scale: 0.7 }}
+                animate={{ x: Math.cos(angle) * dist, y: Math.sin(angle) * dist, opacity: [1, 1, 0], scale: [0.7, 1.1, 0.8] }}
+                transition={{ duration: 1.1, ease: 'easeOut', delay: (i % 6) * 0.015 }}
+                style={{ backgroundColor: color, width: 5, height: 5, filter: 'drop-shadow(0 0 6px rgba(255,255,255,0.6))' }}
+                className="absolute rounded-sm"
+              />
+            )
+          })}
+        </div>
+      ))}
+    </div>
+  )
+}
+
 const FireworkShow = ({ show }) => {
   const bursts = useMemo(() => Array.from({ length: 7 }).map((_, i) => ({
     id: i,
@@ -278,7 +312,9 @@ const Checkpoint = ({ index, title, Icon, accent, side, open, onToggle, steps, c
 export default function Roadmap() {
   const [openId, setOpenId] = useState(null)
   const [completedIds, setCompletedIds] = useState([])
-  const [celebrate, setCelebrate] = useState(null) // { id, y, side }
+  // Permitir múltiples celebraciones simultáneas para que nunca se pierda un confeti
+  const [celebrates, setCelebrates] = useState([]) // [{ key, y }]
+  const [edgeBursts, setEdgeBursts] = useState([]) // [{ key }]
   const [showGrand, setShowGrand] = useState(false)
   const baseHeight = milestones.length * 180
   const tail = showGrand ? 280 : 140
@@ -289,15 +325,21 @@ export default function Roadmap() {
     if (!completedIds.includes(m.id)) {
       const next = [...completedIds, m.id]
       setCompletedIds(next)
-      // Disparo confetti
+
+      // Disparo confeti SIEMPRE: agrego un burst a la cola con clave única
       const y = index * 180 + 65
-      const side = index % 2 === 0 ? 'left' : 'right'
-      setCelebrate({ id: m.id, y, side })
+      const key = `${m.id}-${Date.now()}`
+      setCelebrates(prev => [...prev, { key, y }])
+      // Fuegos en bordes
+      setEdgeBursts(prev => [...prev, { key }])
+
       // Abrir siguiente checkpoint si existe
       const nextMilestone = milestones[index + 1]
       if (nextMilestone) setOpenId(nextMilestone.id)
-      // Limpiar confetti (más tiempo para animación más rica)
-      setTimeout(() => setCelebrate(null), 2200)
+
+      // Remover cada capa de celebración de forma independiente
+      setTimeout(() => setCelebrates(prev => prev.filter(b => b.key !== key)), 1600)
+      setTimeout(() => setEdgeBursts(prev => prev.filter(b => b.key !== key)), 1400)
     }
   }
 
@@ -307,7 +349,6 @@ export default function Roadmap() {
   useEffect(() => {
     if (completedAll) {
       setShowGrand(true)
-      // scroll al bloque de upsell tras una pausa breve
       const t = setTimeout(() => {
         upsellRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
       }, 900)
@@ -486,13 +527,13 @@ export default function Roadmap() {
           {/* Adornos */}
           <CuteDeco height={height} />
 
-          {/* Confetti de celebración */}
+          {/* Confetti de celebración (siempre, por burst) */}
           <AnimatePresence>
-            {celebrate && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                <ConfettiBurst y={celebrate.y} side={celebrate.side} />
+            {celebrates.map(b => (
+              <motion.div key={b.key} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <ConfettiBurst y={b.y} />
               </motion.div>
-            )}
+            ))}
           </AnimatePresence>
 
           {/* Checkpoints */}
@@ -606,6 +647,15 @@ export default function Roadmap() {
 
         {/* Footer/Leyenda removido para un cierre más limpio e integrado */}
       </div>
+
+      {/* Fuegos en bordes al completar cada hito (capa global) */}
+      <AnimatePresence>
+        {edgeBursts.map(b => (
+          <motion.div key={b.key} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <EdgeFireworks id={b.key} />
+          </motion.div>
+        ))}
+      </AnimatePresence>
     </div>
   )
 }
