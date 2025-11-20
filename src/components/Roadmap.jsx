@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Mail,
@@ -15,7 +15,8 @@ import {
   ChevronDown,
   MapPin,
   Flag,
-  CheckCircle
+  CheckCircle,
+  Sparkles
 } from 'lucide-react'
 
 const milestones = [
@@ -141,6 +142,41 @@ const ConfettiBurst = ({ y, side }) => {
   )
 }
 
+// Fuegos artificiales para el 10/10
+const FireworkShow = ({ show }) => {
+  const bursts = useMemo(() => Array.from({ length: 7 }).map((_, i) => ({
+    id: i,
+    x: 10 + Math.random() * 80,
+    y: 20 + Math.random() * 40,
+    count: 18 + Math.floor(Math.random() * 10),
+    hue: 180 + Math.random() * 180
+  })), [])
+  if (!show) return null
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+      {bursts.map(b => (
+        <div key={b.id} className="absolute" style={{ left: `${b.x}%`, top: `${b.y}%` }}>
+          {Array.from({ length: b.count }).map((_, i) => {
+            const angle = (i / b.count) * Math.PI * 2
+            const dist = 80 + Math.random() * 80
+            const color = `hsl(${b.hue + (i % 5) * 12} 90% 60%)`
+            return (
+              <motion.span
+                key={i}
+                initial={{ x: 0, y: 0, opacity: 1, scale: 0.6 }}
+                animate={{ x: Math.cos(angle) * dist, y: Math.sin(angle) * dist, opacity: [1, 1, 0], scale: [0.6, 1.1, 0.8] }}
+                transition={{ duration: 1.4, ease: 'easeOut', delay: (i % 6) * 0.02 }}
+                style={{ backgroundColor: color, width: 6, height: 6, filter: 'drop-shadow(0 0 6px rgba(255,255,255,0.6))' }}
+                className="absolute rounded-sm"
+              />
+            )
+          })}
+        </div>
+      ))}
+    </div>
+  )
+}
+
 const Checkpoint = ({ index, title, Icon, accent, side, open, onToggle, steps, completed, onMarkDone }) => {
   const isLeft = side === 'left'
   return (
@@ -226,7 +262,9 @@ export default function Roadmap() {
   const [openId, setOpenId] = useState(null)
   const [completedIds, setCompletedIds] = useState([])
   const [celebrate, setCelebrate] = useState(null) // { id, y, side }
+  const [showGrand, setShowGrand] = useState(false)
   const height = milestones.length * 180
+  const upsellRef = useRef(null)
 
   const handleMarkDone = (m, index) => {
     if (!completedIds.includes(m.id)) {
@@ -244,7 +282,19 @@ export default function Roadmap() {
     }
   }
 
+  const completedAll = completedIds.length === milestones.length
   const progress = completedIds.length / milestones.length
+
+  useEffect(() => {
+    if (completedAll) {
+      setShowGrand(true)
+      // scroll al bloque de upsell tras una pausa breve
+      const t = setTimeout(() => {
+        upsellRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }, 900)
+      return () => clearTimeout(t)
+    }
+  }, [completedAll])
 
   return (
     <div className="relative w-full">
@@ -283,7 +333,7 @@ export default function Roadmap() {
               />
             </div>
             <AnimatePresence>
-              {completedIds.length > 0 && (
+              {completedIds.length > 0 && !completedAll && (
                 <motion.div
                   initial={{ opacity: 0, y: -6 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -416,6 +466,87 @@ export default function Roadmap() {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Bloque 10/10: Celebración + Upsell */}
+        <div ref={upsellRef} className="relative">
+          <AnimatePresence>
+            {showGrand && (
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 30 }}
+                transition={{ duration: 0.8, ease: 'easeOut' }}
+                className="relative mt-12 sm:mt-16 rounded-3xl overflow-hidden border border-white/10 bg-gradient-to-br from-emerald-500/10 via-cyan-500/10 to-indigo-500/10 p-6 sm:p-10"
+              >
+                {/* Glow animado de fondo */}
+                <motion.div
+                  className="absolute -z-10 inset-0"
+                  initial={{ opacity: 0.5 }}
+                  animate={{ opacity: [0.5, 0.8, 0.5] }}
+                  transition={{ duration: 3, repeat: Infinity }}
+                  style={{ background: 'radial-gradient(1200px 400px at 20% -10%, rgba(56,189,248,0.25), transparent), radial-gradient(900px 300px at 80% 110%, rgba(99,102,241,0.25), transparent)' }}
+                />
+
+                {/* Fuegos Artificiales */}
+                <FireworkShow show={true} />
+
+                <div className="flex flex-col items-center text-center gap-4">
+                  <div className="inline-flex items-center gap-2 text-emerald-300">
+                    <Sparkles className="w-5 h-5" />
+                    <span className="uppercase tracking-widest text-xs font-semibold">¡Objetivo alcanzado 10/10!</span>
+                    <Sparkles className="w-5 h-5" />
+                  </div>
+
+                  <motion.h2
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: [0.9, 1.03, 1], opacity: 1 }}
+                    transition={{ duration: 0.9, ease: 'easeOut' }}
+                    className="text-2xl sm:text-4xl md:text-5xl font-extrabold text-white"
+                  >
+                    Escalá a 50M con rentabilidad y estructura
+                  </motion.h2>
+
+                  {/* Video placeholder (bloque de ejemplo) */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="w-full max-w-3xl"
+                  >
+                    <div className="relative aspect-video rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-slate-800 to-slate-900">
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.97 }}
+                          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur text-white border border-white/15"
+                        >
+                          <span className="w-3 h-3 rounded-full bg-red-500 shadow-[0_0_20px_rgba(239,68,68,0.8)]" />
+                          Ver video de ejemplo
+                        </motion.button>
+                      </div>
+                      {/* líneas decorativas */}
+                      <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-white/10 to-transparent" />
+                    </div>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.15 }}
+                    className="mt-2"
+                  >
+                    <a
+                      href="#agendar"
+                      className="inline-flex items-center justify-center px-6 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 shadow-[0_12px_30px_rgba(20,184,166,0.35)] hover:brightness-110 transition"
+                    >
+                      Agendar Llamada
+                    </a>
+                  </motion.div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Leyenda */}
