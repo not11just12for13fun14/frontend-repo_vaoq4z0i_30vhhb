@@ -92,7 +92,7 @@ const CuteDeco = ({ height }) => {
           style={{ left: `${d.x}%`, top: d.y - d.size }}
         >
           {d.type === 0 && (
-            <div className="opacity:80">
+            <div className="opacity-80">
               <div className="w-16 h-10 bg-white/10 rounded-full blur-sm" />
             </div>
           )}
@@ -456,7 +456,7 @@ export default function Roadmap() {
           className="text-center mb-6 sm:mb-8"
         >
           <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white mb-3">
-            AMVISION Mission 10K
+            Tu camino de $0 a $10M ARS
           </h1>
           <p className="text-sm sm:text-base text-blue-200/80 max-w-2xl mx-auto mb-4">
             Seguí la ruta y completá cada hito para avanzar en tu misión.
