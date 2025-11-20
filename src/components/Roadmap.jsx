@@ -263,7 +263,9 @@ export default function Roadmap() {
   const [completedIds, setCompletedIds] = useState([])
   const [celebrate, setCelebrate] = useState(null) // { id, y, side }
   const [showGrand, setShowGrand] = useState(false)
-  const height = milestones.length * 180
+  const baseHeight = milestones.length * 180
+  const tail = showGrand ? 280 : 140
+  const height = baseHeight + tail
   const upsellRef = useRef(null)
 
   const handleMarkDone = (m, index) => {
@@ -367,68 +369,101 @@ export default function Roadmap() {
                   <feMergeNode in="SourceGraphic" />
                 </feMerge>
               </filter>
+              {/* máscara para desvanecer arriba/abajo y evitar cortes bruscos */}
+              <linearGradient id="fadeVGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="white" stopOpacity="0" />
+                <stop offset="8%" stopColor="white" stopOpacity="1" />
+                <stop offset="92%" stopColor="white" stopOpacity="1" />
+                <stop offset="100%" stopColor="white" stopOpacity="0" />
+              </linearGradient>
+              <mask id="fadeV">
+                <rect x="0" y="0" width="560" height={height} fill="url(#fadeVGrad)" />
+              </mask>
             </defs>
 
-            {Array.from({ length: milestones.length }).map((_, i) => {
-              const y1 = i * 180 + 60
-              const y2 = (i + 1) * 180
-              const left = i % 2 === 0
-              const xCenter = 280
-              const x1 = xCenter + (left ? -150 : 150)
-              const x2 = xCenter + (left ? 150 : -150)
-              const cx1 = xCenter
-              const cx2 = xCenter
-              return (
-                <g key={`band-${i}`} filter="url(#softGlow)">
-                  <path d={`M ${x1-10} ${y1} C ${cx1-10} ${y1 + 50}, ${cx2-10} ${y2 - 50}, ${x2-10} ${y2}`} stroke="url(#borderGrad)" strokeOpacity="0.25" strokeWidth="12" strokeLinecap="round" />
-                  <path d={`M ${x1+10} ${y1} C ${cx1+10} ${y1 + 50}, ${cx2+10} ${y2 - 50}, ${x2+10} ${y2}`} stroke="url(#borderGrad)" strokeOpacity="0.25" strokeWidth="12" strokeLinecap="round" />
-                </g>
-              )
-            })}
+            <g mask="url(#fadeV)">
+              {Array.from({ length: milestones.length }).map((_, i) => {
+                const y1 = i * 180 + 60
+                const y2 = (i + 1) * 180
+                const left = i % 2 === 0
+                const xCenter = 280
+                const x1 = xCenter + (left ? -150 : 150)
+                const x2 = xCenter + (left ? 150 : -150)
+                const cx1 = xCenter
+                const cx2 = xCenter
+                return (
+                  <g key={`band-${i}`} filter="url(#softGlow)">
+                    <path d={`M ${x1-10} ${y1} C ${cx1-10} ${y1 + 50}, ${cx2-10} ${y2 - 50}, ${x2-10} ${y2}`} stroke="url(#borderGrad)" strokeOpacity="0.25" strokeWidth="12" strokeLinecap="round" />
+                    <path d={`M ${x1+10} ${y1} C ${cx1+10} ${y1 + 50}, ${cx2+10} ${y2 - 50}, ${x2+10} ${y2}`} stroke="url(#borderGrad)" strokeOpacity="0.25" strokeWidth="12" strokeLinecap="round" />
+                  </g>
+                )
+              })}
 
-            {Array.from({ length: milestones.length }).map((_, i) => {
-              const y1 = i * 180 + 60
-              const y2 = (i + 1) * 180
-              const left = i % 2 === 0
-              const xCenter = 280
-              const x1 = xCenter + (left ? -150 : 150)
-              const x2 = xCenter + (left ? 150 : -150)
-              const cx1 = xCenter
-              const cx2 = xCenter
-              return (
-                <g key={`center-${i}`}>
-                  <path
-                    d={`M ${x1} ${y1} C ${cx1} ${y1 + 50}, ${cx2} ${y2 - 50}, ${x2} ${y2}`}
-                    stroke="url(#trailGrad)"
-                    strokeWidth="8"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="opacity-95"
-                    filter="url(#softGlow)"
-                  />
-                  {/* tapas circulares para que "se una" con el hito */}
-                  <circle cx={x1} cy={y1} r="5" fill="#22D3EE" opacity="0.9" />
-                  <circle cx={x2} cy={y2} r="5" fill="#22D3EE" opacity="0.9" />
-                </g>
-              )
-            })}
+              {Array.from({ length: milestones.length }).map((_, i) => {
+                const y1 = i * 180 + 60
+                const y2 = (i + 1) * 180
+                const left = i % 2 === 0
+                const xCenter = 280
+                const x1 = xCenter + (left ? -150 : 150)
+                const x2 = xCenter + (left ? 150 : -150)
+                const cx1 = xCenter
+                const cx2 = xCenter
+                return (
+                  <g key={`center-${i}`}>
+                    <path
+                      d={`M ${x1} ${y1} C ${cx1} ${y1 + 50}, ${cx2} ${y2 - 50}, ${x2} ${y2}`}
+                      stroke="url(#trailGrad)"
+                      strokeWidth="8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="opacity-95"
+                      filter="url(#softGlow)"
+                    />
+                    {/* tapas circulares para que "se una" con el hito */}
+                    <circle cx={x1} cy={y1} r="5" fill="#22D3EE" opacity="0.9" />
+                    <circle cx={x2} cy={y2} r="5" fill="#22D3EE" opacity="0.9" />
+                  </g>
+                )
+              })}
 
-            {/* guía punteada central sutil */}
-            <motion.line
-              x1="280" y1="0" x2="280" y2={height}
-              stroke="rgba(255,255,255,0.12)"
-              strokeDasharray="6 10"
-              initial={{ pathLength: 0 }}
-              animate={{ pathLength: 1 }}
-              transition={{ duration: 1.6 }}
-            />
+              {/* tramo final suave que baja e integra con el upsell */}
+              {(() => {
+                const i = milestones.length - 1
+                const y2 = (i + 1) * 180
+                const left = i % 2 === 0
+                const xCenter = 280
+                const xStart = xCenter + (left ? 150 : -150)
+                const yEnd = baseHeight + Math.min(tail - 20, 220)
+                return (
+                  <g key="final-tail" filter="url(#softGlow)">
+                    {/* bordes brillo */}
+                    <path d={`M ${xStart-10} ${y2} C ${xCenter-10} ${y2 + 60}, ${xCenter-10} ${yEnd - 60}, ${xCenter-10} ${yEnd}`} stroke="url(#borderGrad)" strokeOpacity="0.22" strokeWidth="12" strokeLinecap="round" />
+                    <path d={`M ${xStart+10} ${y2} C ${xCenter+10} ${y2 + 60}, ${xCenter+10} ${yEnd - 60}, ${xCenter+10} ${yEnd}`} stroke="url(#borderGrad)" strokeOpacity="0.22" strokeWidth="12" strokeLinecap="round" />
+                    {/* centro */}
+                    <path d={`M ${xStart} ${y2} C ${xCenter} ${y2 + 60}, ${xCenter} ${yEnd - 60}, ${xCenter} ${yEnd}`} stroke="url(#trailGrad)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
+                    <circle cx={xStart} cy={y2} r="5" fill="#22D3EE" opacity="0.9" />
+                    <circle cx={xCenter} cy={yEnd} r="5" fill="#22D3EE" opacity="0.7" />
+                  </g>
+                )
+              })()}
 
-            {/* bolita ornamental */}
-            <motion.circle r="5" fill="#22D3EE" filter="url(#softGlow)"
-              animate={{ cy: [0, height], opacity: [0.8, 0.4, 0.8] }}
-              transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
-              cx="280"
-            />
+              {/* guía punteada central sutil con desvanecido */}
+              <motion.line
+                x1="280" y1="0" x2="280" y2={height}
+                stroke="rgba(255,255,255,0.12)"
+                strokeDasharray="6 10"
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ duration: 1.6, ease: 'easeInOut' }}
+              />
+
+              {/* bolita ornamental con movimiento más suave y fade en extremos */}
+              <motion.circle r="4" fill="#22D3EE" filter="url(#softGlow)"
+                animate={{ cy: [-20, height + 20], opacity: [0, 0.6, 0] }}
+                transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
+                cx="280"
+              />
+            </g>
           </svg>
 
           {/* Adornos */}
@@ -468,24 +503,24 @@ export default function Roadmap() {
           </div>
         </div>
 
-        {/* Bloque 10/10: Celebración + Upsell */}
-        <div ref={upsellRef} className="relative">
+        {/* Bloque 10/10: Celebración + Upsell (integrado) */}
+        <div ref={upsellRef} className="relative -mt-8">
           <AnimatePresence>
             {showGrand && (
               <motion.div
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 30 }}
+                exit={{ opacity: 0, y: 20 }}
                 transition={{ duration: 0.8, ease: 'easeOut' }}
-                className="relative mt-12 sm:mt-16 rounded-3xl overflow-hidden border border-white/10 bg-gradient-to-br from-emerald-500/10 via-cyan-500/10 to-indigo-500/10 p-6 sm:p-10"
+                className="relative rounded-3xl overflow-hidden bg-white/0 p-0"
               >
-                {/* Glow animado de fondo */}
+                {/* Glow sutil para integrar */}
                 <motion.div
                   className="absolute -z-10 inset-0"
-                  initial={{ opacity: 0.5 }}
-                  animate={{ opacity: [0.5, 0.8, 0.5] }}
+                  initial={{ opacity: 0.35 }}
+                  animate={{ opacity: [0.35, 0.6, 0.35] }}
                   transition={{ duration: 3, repeat: Infinity }}
-                  style={{ background: 'radial-gradient(1200px 400px at 20% -10%, rgba(56,189,248,0.25), transparent), radial-gradient(900px 300px at 80% 110%, rgba(99,102,241,0.25), transparent)' }}
+                  style={{ background: 'radial-gradient(1200px 400px at 20% -10%, rgba(56,189,248,0.18), transparent), radial-gradient(900px 300px at 80% 110%, rgba(99,102,241,0.18), transparent)' }}
                 />
 
                 {/* Fuegos Artificiales */}
@@ -499,8 +534,8 @@ export default function Roadmap() {
                   </div>
 
                   <motion.h2
-                    initial={{ scale: 0.9, opacity: 0 }}
-                    animate={{ scale: [0.9, 1.03, 1], opacity: 1 }}
+                    initial={{ scale: 0.95, opacity: 0 }}
+                    animate={{ scale: [0.95, 1.02, 1], opacity: 1 }}
                     transition={{ duration: 0.9, ease: 'easeOut' }}
                     className="text-2xl sm:text-4xl md:text-5xl font-extrabold text-white"
                   >
@@ -549,11 +584,7 @@ export default function Roadmap() {
           </AnimatePresence>
         </div>
 
-        {/* Leyenda */}
-        <div className="mt-10 sm:mt-14 grid grid-cols-1 sm:grid-cols-2 gap-4 text-blue-200/80 text-sm">
-          <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-white/70 inline-block"></span> Cada checkpoint se abre con un paso a paso corto.</div>
-          <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-gradient-to-r from-emerald-400 to-teal-500 inline-block"></span> El caminito es interactivo, suave y con brillo.</div>
-        </div>
+        {/* Footer/Leyenda removido para un cierre más limpio e integrado */}
       </div>
     </div>
   )
