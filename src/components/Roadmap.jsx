@@ -583,9 +583,11 @@ export default function Roadmap() {
                 const y2 = (i + 1) * 180
                 const left = i % 2 === 0
                 const xCenter = 280
-                const x1 = xCenter + (left ? -150 : 150)
-                const x2 = xCenter + (left ? 150 : -150)
-                const cx1 = xCenter
+                const anchorOffset = 180 // más adentro del cuadro
+                const bendIn = 50 // meterse hacia adentro antes de curvar
+                const x1 = xCenter + (left ? -anchorOffset : anchorOffset)
+                const x2 = xCenter + (left ? anchorOffset : -anchorOffset)
+                const cx1 = x1 + (left ? -bendIn : bendIn)
                 const cx2 = xCenter
 
                 const dMain = `M ${x1} ${y1} C ${cx1} ${y1 + 50}, ${cx2} ${y2 - 50}, ${x2} ${y2}`
@@ -612,12 +614,14 @@ export default function Roadmap() {
                 const y2 = (i + 1) * 180
                 const left = i % 2 === 0
                 const xCenter = 280
-                const xStart = xCenter + (left ? 150 : -150)
+                const anchorOffset = 180
+                const bendIn = 50
+                const xStart = xCenter + (left ? anchorOffset : -anchorOffset)
                 const yEnd = baseHeight + Math.min(tail - 20, 220)
 
-                const dMain = `M ${xStart} ${y2} C ${xCenter} ${y2 + 60}, ${xCenter} ${yEnd - 60}, ${xCenter} ${yEnd}`
-                const dLeft = `M ${xStart-10} ${y2} C ${xCenter-10} ${y2 + 60}, ${xCenter-10} ${yEnd - 60}, ${xCenter-10} ${yEnd}`
-                const dRight = `M ${xStart+10} ${y2} C ${xCenter+10} ${y2 + 60}, ${xCenter+10} ${yEnd - 60}, ${xCenter+10} ${yEnd}`
+                const dMain = `M ${xStart} ${y2} C ${xCenter + (left ? bendIn : -bendIn)} ${y2 + 60}, ${xCenter} ${yEnd - 60}, ${xCenter} ${yEnd}`
+                const dLeft = `M ${xStart-10} ${y2} C ${xCenter + (left ? bendIn-10 : -bendIn-10)} ${y2 + 60}, ${xCenter-10} ${yEnd - 60}, ${xCenter-10} ${yEnd}`
+                const dRight = `M ${xStart+10} ${y2} C ${xCenter + (left ? bendIn+10 : -bendIn+10)} ${y2 + 60}, ${xCenter+10} ${yEnd - 60}, ${xCenter+10} ${yEnd}`
 
                 const lit = isSegmentLit(milestones.length - 1)
 
