@@ -361,6 +361,12 @@ const RoadSegment = ({ dMain, dLeft, dRight, lit, withCaps = true }) => {
 
 const Checkpoint = ({ index, title, Icon, accent, side, open, onToggle, steps, completed, onMarkDone }) => {
   const isLeft = side === 'left'
+  const markRef = useRef(null)
+  const handleClick = (e) => {
+    if (completed) return
+    const r = markRef.current?.getBoundingClientRect()
+    onMarkDone(r)
+  }
   return (
     <div className={`relative w-full flex ${isLeft ? 'justify-start' : 'justify-end'}`}>
       <div className={`w-[48%] ${isLeft ? 'pr-6' : 'pl-6'}`}>
@@ -415,7 +421,8 @@ const Checkpoint = ({ index, title, Icon, accent, side, open, onToggle, steps, c
                 </ul>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <motion.button
-                    onClick={onMarkDone}
+                    ref={markRef}
+                    onClick={handleClick}
                     whileTap={{ scale: 0.98 }}
                     whileHover={{ scale: 1.02 }}
                     disabled={completed}
@@ -440,7 +447,7 @@ const Checkpoint = ({ index, title, Icon, accent, side, open, onToggle, steps, c
   )
 }
 
-export default function Roadmap() {
+export default function Roadmap({ onAwardCoins }) {
   const [openId, setOpenId] = useState(null)
   const [completedIds, setCompletedIds] = useState([])
   // Permitir múltiples celebraciones simultáneas para que nunca se pierda un confeti
@@ -452,7 +459,7 @@ export default function Roadmap() {
   const height = baseHeight + tail
   const upsellRef = useRef(null)
 
-  const handleMarkDone = (m, index) => {
+  const handleMarkDone = (m, index, sourceRect) => {
     if (!completedIds.includes(m.id)) {
       const next = [...completedIds, m.id]
       setCompletedIds(next)
@@ -463,6 +470,13 @@ export default function Roadmap() {
       setCelebrates(prev => [...prev, { key, y }])
       // Un solo burst global activo a la vez para bajar carga
       setEdgeBursts([{ key }])
+
+      // Coins flight hacia barra superior
+      if (onAwardCoins && sourceRect) {
+        const x = sourceRect.left + sourceRect.width / 2
+        const yAbs = sourceRect.top + sourceRect.height / 2
+        onAwardCoins({ x, y: yAbs, amount: 20 })
+      }
 
       // Abrir siguiente checkpoint si existe
       const nextMilestone = milestones[index + 1]
@@ -687,7 +701,7 @@ export default function Roadmap() {
                   open={openId === m.id}
                   onToggle={() => setOpenId(openId === m.id ? null : m.id)}
                   completed={completedIds.includes(m.id)}
-                  onMarkDone={() => handleMarkDone(m, i)}
+                  onMarkDone={(rect) => handleMarkDone(m, i, rect)}
                 />
               </div>
             ))}
