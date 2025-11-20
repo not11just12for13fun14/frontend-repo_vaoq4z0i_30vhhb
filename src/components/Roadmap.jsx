@@ -113,14 +113,14 @@ const CuteDeco = ({ height }) => {
 
 // Confeti: explosión y desvanecimiento (sin deriva lateral secundaria)
 const ConfettiBurst = ({ y }) => {
-  const count = 50
+  const count = 22 // reducido para mejorar rendimiento
   const pieces = useMemo(() => Array.from({ length: count }).map((_, i) => {
     const angle = (i / count) * Math.PI * 2
-    const radius = 90 + Math.random() * 110
+    const radius = 70 + Math.random() * 80 // menos radio
     const hue = 180 + Math.random() * 180
-    const w = 6 + Math.random() * 10
-    const h = 10 + Math.random() * 14
-    const rot = 180 + Math.random() * 540
+    const w = 6 + Math.random() * 8
+    const h = 9 + Math.random() * 12
+    const rot = 180 + Math.random() * 420
     return {
       id: i,
       x: Math.cos(angle) * radius,
@@ -129,7 +129,7 @@ const ConfettiBurst = ({ y }) => {
       w,
       h,
       rot,
-      delay: Math.random() * 0.04
+      delay: Math.random() * 0.03
     }
   }), [])
   return (
@@ -139,13 +139,13 @@ const ConfettiBurst = ({ y }) => {
           <motion.span
             key={p.id}
             initial={{ opacity: 1, x: 0, y: 0, scale: 0.9, rotate: 0 }}
-            animate={{ opacity: [1, 1, 0.6, 0], x: p.x, y: p.y, scale: [0.9, 1.05, 1], rotate: p.rot }}
-            transition={{ duration: 1.2, ease: 'easeOut', delay: p.delay }}
+            animate={{ opacity: [1, 1, 0.6, 0], x: p.x, y: p.y, scale: [0.9, 1.02, 1], rotate: p.rot }}
+            transition={{ duration: 0.9, ease: 'easeOut', delay: p.delay }}
             style={{
               background: `linear-gradient(180deg, hsl(${p.hue} 95% 62%) 0%, hsl(${p.hue + 30} 95% 58%) 100%)`,
               width: p.w,
               height: p.h,
-              filter: 'drop-shadow(0 0 6px rgba(255,255,255,0.45))',
+              filter: 'drop-shadow(0 0 5px rgba(255,255,255,0.35))',
             }}
             className="inline-block absolute rounded-[2px]"
           />)
@@ -158,38 +158,39 @@ const ConfettiBurst = ({ y }) => {
 // Utilidad: aleatorio entre rangos
 const rand = (min, max) => min + Math.random() * (max - min)
 
-// Fireworks a pantalla completa, asimétricos y gigantes
+// Fireworks a pantalla completa, asimétricos y más livianos
 const EdgeFireworks = ({ id }) => {
   const viewport = useMemo(() => {
     if (typeof window === 'undefined') return { w: 1200, h: 800 }
     return { w: window.innerWidth, h: window.innerHeight }
   }, [id])
 
-  // Genera centros en distintas zonas (incluye bordes y medio) con separación básica
+  // Menos spots y con separación
   const spots = useMemo(() => {
-    const n = 6 + Math.floor(Math.random() * 4) // 6–9 ráfagas
+    const n = 2 + Math.floor(Math.random() * 2) // 2–3 ráfagas
     const arr = []
     let guard = 0
-    while (arr.length < n && guard < 200) {
+    while (arr.length < n && guard < 120) {
       guard++
-      const x = rand(8, 92) // en % para dispersión amplia
-      const y = rand(8, 92)
-      if (arr.every(s => (Math.hypot(s.x - x, s.y - y) > 14))) {
+      const x = rand(10, 90)
+      const y = rand(12, 88)
+      if (arr.every(s => (Math.hypot(s.x - x, s.y - y) > 18))) {
         arr.push({ x, y })
       }
     }
-    // empujar algunos bien al borde para sensación "Disney"
+    // agregar como mucho 1 al borde
     const edges = [
-      { x: rand(2, 6), y: rand(10, 90) },
-      { x: rand(94, 98), y: rand(10, 90) },
-      { x: rand(10, 90), y: rand(2, 6) },
-      { x: rand(10, 90), y: rand(94, 98) },
+      { x: rand(3, 8), y: rand(15, 85) },
+      { x: rand(92, 97), y: rand(15, 85) },
+      { x: rand(15, 85), y: rand(3, 8) },
+      { x: rand(15, 85), y: rand(92, 97) },
     ]
-    return [...arr.slice(0, n - 2), ...edges.slice(0, 2 + Math.floor(Math.random() * 2))]
+    const extra = Math.random() < 0.6 ? [edges[Math.floor(Math.random()*edges.length)]] : []
+    return [...arr, ...extra]
   }, [id])
 
-  // Parámetros gigantes: radios muy grandes en px según viewport
-  const rMax = Math.max(viewport.w, viewport.h) * 0.46 // casi media pantalla
+  // Radios grandes pero moderados
+  const rMax = Math.max(viewport.w, viewport.h) * 0.38
   const rMin = rMax * 0.55
 
   return (
@@ -198,22 +199,21 @@ const EdgeFireworks = ({ id }) => {
         <div key={idx} className="absolute" style={{ left: `${s.x}%`, top: `${s.y}%` }}>
           {/* fogonazo inicial */}
           <motion.div
-            initial={{ opacity: 0.9, scale: 0 }}
-            animate={{ opacity: [0.9, 0.5, 0], scale: [0, 1.6, 2.2] }}
-            transition={{ duration: 0.45, ease: 'easeOut' }}
+            initial={{ opacity: 0.85, scale: 0 }}
+            animate={{ opacity: [0.85, 0.4, 0], scale: [0, 1.4, 2.0] }}
+            transition={{ duration: 0.38, ease: 'easeOut' }}
             className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full"
-            style={{ width: 120, height: 120, background: 'radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.25) 40%, rgba(255,255,255,0) 70%)' }}
+            style={{ width: 100, height: 100, background: 'radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.2) 40%, rgba(255,255,255,0) 70%)' }}
           />
 
-          {Array.from({ length: 48 + Math.floor(Math.random() * 48) }).map((_, i) => {
-            // ángulos y distancias no proporcionales para sensación dispareja
+          {Array.from({ length: 16 + Math.floor(Math.random() * 12) }).map((_, i) => {
             const angle = Math.random() * Math.PI * 2
-            const dist = rand(rMin * 0.6, rMax) * (Math.random() * 0.9 + 0.4)
-            const size = rand(6, 11)
+            const dist = rand(rMin * 0.6, rMax) * (Math.random() * 0.8 + 0.5)
+            const size = rand(4, 8)
             const hue = rand(0, 360)
-            const delay = Math.random() * 0.08
-            const dur = rand(1.4, 2.1)
-            const wobble = rand(-30, 30)
+            const delay = Math.random() * 0.06
+            const dur = rand(0.8, 1.2)
+            const wobble = rand(-24, 24)
             return (
               <motion.span
                 key={i}
@@ -221,15 +221,15 @@ const EdgeFireworks = ({ id }) => {
                 animate={{
                   x: Math.cos(angle) * dist + Math.cos(angle + Math.PI / 2) * wobble,
                   y: Math.sin(angle) * dist + Math.sin(angle + Math.PI / 2) * wobble,
-                  opacity: [1, 1, 0.85, 0],
-                  scale: [0.8, 1.15, 0.95]
+                  opacity: [1, 1, 0.8, 0],
+                  scale: [0.8, 1.05, 0.95]
                 }}
                 transition={{ duration: dur, ease: 'easeOut', delay }}
                 style={{
                   background: `linear-gradient(180deg, hsl(${hue} 95% 64%) 0%, hsl(${(hue + 22) % 360} 95% 58%) 100%)`,
                   width: size,
                   height: size,
-                  filter: 'drop-shadow(0 0 10px rgba(255,255,255,0.7))'
+                  filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.6))'
                 }}
                 className="absolute rounded-sm"
               />
@@ -241,25 +241,25 @@ const EdgeFireworks = ({ id }) => {
   )
 }
 
-// Show final a pantalla completa, grande y con varias olas
+// Show final a pantalla completa, grande pero optimizado
 const FireworkShow = ({ show }) => {
   const viewport = useMemo(() => {
     if (typeof window === 'undefined') return { w: 1200, h: 800 }
     return { w: window.innerWidth, h: window.innerHeight }
   }, [show])
 
-  const bursts = useMemo(() => Array.from({ length: 9 }).map((_, i) => ({
+  const bursts = useMemo(() => Array.from({ length: 4 + Math.floor(Math.random()*2) }).map((_, i) => ({
     id: i,
-    x: 6 + Math.random() * 88,
-    y: 8 + Math.random() * 70,
-    count: 80 + Math.floor(Math.random() * 60),
+    x: 8 + Math.random() * 84,
+    y: 10 + Math.random() * 60,
+    count: 36 + Math.floor(Math.random() * 24),
     hue: Math.floor(Math.random() * 360),
-    delayBase: Math.random() * 0.6
+    delayBase: Math.random() * 0.5
   })), [])
 
   if (!show) return null
 
-  const rMax = Math.max(viewport.w, viewport.h) * 0.5
+  const rMax = Math.max(viewport.w, viewport.h) * 0.42
   const rMin = rMax * 0.5
 
   return (
@@ -268,21 +268,21 @@ const FireworkShow = ({ show }) => {
         <div key={b.id} className="absolute" style={{ left: `${b.x}%`, top: `${b.y}%` }}>
           {/* flash */}
           <motion.div
-            initial={{ opacity: 0.95, scale: 0 }}
-            animate={{ opacity: [0.95, 0.4, 0], scale: [0, 1.8, 2.4] }}
-            transition={{ duration: 0.55, ease: 'easeOut', delay: b.delayBase }}
+            initial={{ opacity: 0.9, scale: 0 }}
+            animate={{ opacity: [0.9, 0.35, 0], scale: [0, 1.5, 2.2] }}
+            transition={{ duration: 0.45, ease: 'easeOut', delay: b.delayBase }}
             className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full"
-            style={{ width: 160, height: 160, background: 'radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.25) 40%, rgba(255,255,255,0) 70%)' }}
+            style={{ width: 120, height: 120, background: 'radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.2) 40%, rgba(255,255,255,0) 70%)' }}
           />
 
           {Array.from({ length: b.count }).map((_, i) => {
             const angle = Math.random() * Math.PI * 2
-            const dist = rand(rMin * 0.7, rMax) * (Math.random() * 1.1 + 0.3)
-            const hue = (b.hue + rand(-30, 30) + i) % 360
-            const size = rand(7, 12)
-            const delay = b.delayBase + (Math.random() * 0.12)
-            const dur = rand(1.6, 2.4)
-            const wobble = rand(-36, 36)
+            const dist = rand(rMin * 0.7, rMax) * (Math.random() * 1.0 + 0.3)
+            const hue = (b.hue + rand(-24, 24) + i) % 360
+            const size = rand(5, 9)
+            const delay = b.delayBase + (Math.random() * 0.1)
+            const dur = rand(1.0, 1.5)
+            const wobble = rand(-28, 28)
             return (
               <motion.span
                 key={i}
@@ -291,14 +291,14 @@ const FireworkShow = ({ show }) => {
                   x: Math.cos(angle) * dist + Math.cos(angle + Math.PI / 2) * wobble,
                   y: Math.sin(angle) * dist + Math.sin(angle + Math.PI / 2) * wobble,
                   opacity: [1, 1, 0.85, 0],
-                  scale: [0.85, 1.2, 1]
+                  scale: [0.85, 1.1, 1]
                 }}
                 transition={{ duration: dur, ease: 'easeOut', delay }}
                 style={{
                   background: `linear-gradient(180deg, hsl(${hue} 95% 64%) 0%, hsl(${(hue + 22) % 360} 95% 58%) 100%)`,
                   width: size,
                   height: size,
-                  filter: 'drop-shadow(0 0 12px rgba(255,255,255,0.8))'
+                  filter: 'drop-shadow(0 0 10px rgba(255,255,255,0.7))'
                 }}
                 className="absolute rounded-sm"
               />
@@ -408,20 +408,20 @@ export default function Roadmap() {
       const next = [...completedIds, m.id]
       setCompletedIds(next)
 
-      // Disparo confeti SIEMPRE: agrego un burst a la cola con clave única
+      // Disparo confeti (optimizado)
       const y = index * 180 + 65
       const key = `${m.id}-${Date.now()}`
       setCelebrates(prev => [...prev, { key, y }])
-      // Fuegos gigantes por toda la pantalla
-      setEdgeBursts(prev => [...prev, { key }])
+      // Un solo burst global activo a la vez para bajar carga
+      setEdgeBursts([{ key }])
 
       // Abrir siguiente checkpoint si existe
       const nextMilestone = milestones[index + 1]
       if (nextMilestone) setOpenId(nextMilestone.id)
 
-      // Remover cada capa de celebración de forma independiente
-      setTimeout(() => setCelebrates(prev => prev.filter(b => b.key !== key)), 2000)
-      setTimeout(() => setEdgeBursts(prev => prev.filter(b => b.key !== key)), 2300)
+      // Limpiar más rápido
+      setTimeout(() => setCelebrates(prev => prev.filter(b => b.key !== key)), 1200)
+      setTimeout(() => setEdgeBursts(prev => prev.filter(b => b.key !== key)), 1200)
     }
   }
 
@@ -663,7 +663,7 @@ export default function Roadmap() {
                   style={{ background: 'radial-gradient(1200px 400px at 20% -10%, rgba(56,189,248,0.18), transparent), radial-gradient(900px 300px at 80% 110%, rgba(99,102,241,0.18), transparent)' }}
                 />
 
-                {/* Fuegos Artificiales gigantes */}
+                {/* Fuegos Artificiales (optimizado) */}
                 <FireworkShow show={true} />
 
                 <div className="flex flex-col items-center text-center gap-4 pb-16 sm:pb-24">
