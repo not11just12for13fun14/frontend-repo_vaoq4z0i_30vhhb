@@ -112,15 +112,21 @@ const CuteDeco = ({ height }) => {
 }
 
 const ConfettiBurst = ({ y, side }) => {
-  const pieces = useMemo(() => Array.from({ length: 22 }).map((_, i) => {
-    const angle = (i / 22) * Math.PI * 2
-    const dist = 40 + Math.random() * 50
+  const pieces = useMemo(() => Array.from({ length: 40 }).map((_, i) => {
+    const angle = (i / 40) * Math.PI * 2
+    const burstDist = 70 + Math.random() * 90
+    const drift = (Math.random() * 40 + 10) * (side === 'left' ? 1 : -1)
     return {
       id: i,
-      x: Math.cos(angle) * dist * (side === 'left' ? 1 : -1),
-      y: Math.sin(angle) * dist,
-      r: 4 + Math.random() * 5,
-      c: ['#22d3ee', '#38bdf8', '#a78bfa', '#34d399', '#f472b6'][i % 5]
+      x1: Math.cos(angle) * burstDist * (side === 'left' ? 1 : -1),
+      y1: Math.sin(angle) * burstDist,
+      x2: Math.cos(angle) * (burstDist * 0.6) + drift,
+      y2: Math.sin(angle) * (burstDist * 0.3) + (120 + Math.random() * 140),
+      w: 6 + Math.random() * 8,
+      h: 10 + Math.random() * 12,
+      rot: 180 + Math.random() * 540,
+      hue: 180 + Math.random() * 180,
+      delay: Math.random() * 0.06
     }
   }), [side])
   const originX = '50%'
@@ -130,11 +136,22 @@ const ConfettiBurst = ({ y, side }) => {
         {pieces.map(p => (
           <motion.span
             key={p.id}
-            initial={{ opacity: 1, x: 0, y: 0, scale: 0.6, rotate: 0 }}
-            animate={{ opacity: [1, 1, 0], x: p.x, y: p.y, scale: [0.6, 1.1, 1], rotate: 180 }}
-            transition={{ duration: 0.9, ease: 'easeOut' }}
-            style={{ backgroundColor: p.c, width: p.r, height: p.r }}
-            className="inline-block rounded-sm absolute shadow-[0_0_0_2px_rgba(255,255,255,0.15)]"
+            initial={{ opacity: 1, x: 0, y: 0, scale: 0.9, rotate: 0 }}
+            animate={{
+              opacity: [1, 1, 0.95, 0.85, 0],
+              x: [0, p.x1, p.x2],
+              y: [0, p.y1, p.y2],
+              scale: [0.9, 1.1, 1],
+              rotate: [0, p.rot * 0.6, p.rot]
+            }}
+            transition={{ duration: 1.8, ease: 'easeOut', delay: p.delay }}
+            style={{
+              background: `linear-gradient(180deg, hsl(${p.hue} 95% 62%) 0%, hsl(${p.hue + 30} 95% 58%) 100%)`,
+              width: p.w,
+              height: p.h,
+              filter: 'drop-shadow(0 0 6px rgba(255,255,255,0.5))',
+            }}
+            className="inline-block absolute rounded-[2px]"
           />
         ))}
       </div>
@@ -279,8 +296,8 @@ export default function Roadmap() {
       // Abrir siguiente checkpoint si existe
       const nextMilestone = milestones[index + 1]
       if (nextMilestone) setOpenId(nextMilestone.id)
-      // Limpiar confetti
-      setTimeout(() => setCelebrate(null), 1000)
+      // Limpiar confetti (más tiempo para animación más rica)
+      setTimeout(() => setCelebrate(null), 2200)
     }
   }
 
@@ -526,7 +543,7 @@ export default function Roadmap() {
                 {/* Fuegos Artificiales */}
                 <FireworkShow show={true} />
 
-                <div className="flex flex-col items-center text-center gap-4">
+                <div className="flex flex-col items-center text-center gap-4 pb-16 sm:pb-24">
                   <div className="inline-flex items-center gap-2 text-emerald-300">
                     <Sparkles className="w-5 h-5" />
                     <span className="uppercase tracking-widest text-xs font-semibold">¡Objetivo alcanzado 10/10!</span>
@@ -578,6 +595,9 @@ export default function Roadmap() {
                       Agendar Llamada
                     </a>
                   </motion.div>
+
+                  {/* Espacio extra debajo del botón para respirar visualmente */}
+                  <div className="h-10 sm:h-16" />
                 </div>
               </motion.div>
             )}
